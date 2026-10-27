@@ -1,0 +1,764 @@
+<title>Yeghani Boxing Plan Analysis</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: poster-style masthead, a state-by-month matrix for scanning, then a dated agenda grouped by month. */
+:root {
+  --bg: #EEF0F4;
+  --surface: #F9FAFC;
+  --fg: #12161D;
+  --muted: #566070;
+  --line: #D3D8E1;
+  --accent: #C42B1C;
+  --nat: #1C2230;
+  --int: #A23FC9;
+  --vic: #3730A3;
+  --nsw: #0A7FB8;
+  --qld: #9B1B4B;
+  --wa: #B7860B;
+  --sa: #E0561B;
+  --tas: #4D7C0F;
+  --act: #0F766E;
+  --nt: #8A4B1E;
+  --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --body: 'Public Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F131A; --surface: #171C25; --fg: #E7EAF0; --muted: #9AA4B5; --line: #2A3140; --accent: #FF6B5A;
+    --nat: #E7EAF0; --int: #C98BEA; --vic: #8E9BFF; --nsw: #4DB8EC; --qld: #F0699A; --wa: #E8B93A;
+    --sa: #FF8A52; --tas: #8CC84B; --act: #3FC4B6; --nt: #D49A6A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F131A; --surface: #171C25; --fg: #E7EAF0; --muted: #9AA4B5; --line: #2A3140; --accent: #FF6B5A;
+  --nat: #E7EAF0; --int: #C98BEA; --vic: #8E9BFF; --nsw: #4DB8EC; --qld: #F0699A; --wa: #E8B93A;
+  --sa: #FF8A52; --tas: #8CC84B; --act: #3FC4B6; --nt: #D49A6A;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 15px/1.5 var(--body);
+  padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 28px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Masthead */
+.mast { display: grid; gap: 10px; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+h1 {
+  margin: 0; font: 800 clamp(2.4rem, 8vw, 4.4rem)/.92 var(--display);
+  text-transform: uppercase; letter-spacing: .01em; text-wrap: balance;
+}
+.lede { margin: 0; max-width: 62ch; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Controls */
+.controls { display: grid; gap: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px;
+  background: transparent; font-size: 13px; font-weight: 500;
+}
+.chip[aria-pressed="true"] { background: var(--surface); border-color: var(--fg); }
+.chip[aria-pressed="false"] { opacity: .55; }
+.chip .n { font: 400 11px var(--mono); color: var(--muted); }
+.dot-sw { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; width: fit-content; max-width: 100%; }
+.seg button { padding: 7px 14px; background: transparent; border: 0; font-size: 13px; font-weight: 500; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.row-tools { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; }
+.link-btn { background: none; border: 0; padding: 4px 0; font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Matrix */
+.panel-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin: 0 0 10px; }
+h2 { margin: 0; font: 800 1.5rem/1 var(--display); text-transform: uppercase; letter-spacing: .02em; }
+.hint { font-size: 13px; color: var(--muted); }
+.matrix-scroll { overflow-x: auto; border-block: 1px solid var(--line); }
+table.matrix { border-collapse: collapse; width: 100%; min-width: 760px; }
+.matrix th, .matrix td { padding: 0; }
+.matrix thead th {
+  font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  padding: 10px 2px 8px; text-align: center; border-top: 2px solid transparent;
+}
+.matrix thead th.yr { color: var(--fg); }
+.matrix thead th.now { color: var(--accent); border-top-color: var(--accent); }
+.matrix tbody th {
+  position: sticky; left: 0; z-index: 1; background: var(--bg); text-align: left;
+  padding: 0 12px 0 0; font-weight: 500; font-size: 13px; white-space: nowrap; min-width: 150px;
+}
+.matrix tbody th .lab { display: flex; align-items: center; gap: 8px; height: 38px; }
+.matrix tbody th .zero { font: 400 11px var(--mono); color: var(--muted); }
+.matrix tbody tr { border-top: 1px solid var(--line); }
+.matrix tbody tr.off { opacity: .35; }
+.matrix td .cell { display: flex; justify-content: center; align-items: center; gap: 4px; height: 38px; flex-wrap: wrap; }
+.mk {
+  width: 14px; height: 14px; border-radius: 50%; padding: 0; background: var(--c);
+  border: 2px solid var(--c);
+}
+.mk.e { background: transparent; }
+.mk:hover { transform: scale(1.25); }
+.mk.lg { border-radius: 3px; }
+.mk.pr { border-radius: 2px; width: 12px; height: 12px; transform: rotate(45deg); }
+.mk.pr:hover { transform: rotate(45deg) scale(1.25); }
+.bd { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; border: 1px solid var(--line); color: var(--fg); }
+.chk { font-size: 12px; color: var(--muted); font-style: italic; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px 8px; border-bottom: 1px solid var(--line); }
+.tab { background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; padding: 10px 14px; font-weight: 600; font-size: 15px; color: var(--muted); }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tab { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; }
+.tn { font: 500 12px var(--mono); font-variant-numeric: tabular-nums; margin-left: 6px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg); }
+.tm { font: 400 12px var(--mono); font-weight: 400; color: var(--muted); }
+.lad-sum { margin: 0 0 10px; color: var(--muted); max-width: 70ch; font-size: 14px; }
+.lad-scroll { overflow-x: auto; border-block: 1px solid var(--line); }
+table.lad { border-collapse: collapse; width: 100%; min-width: 800px; font-size: 14px; }
+.lad th { font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 10px 12px 8px 0; white-space: nowrap; }
+.lad td { padding: 9px 12px 9px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.lad .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.lad .nm { font-weight: 600; }
+.lad .sub { display: block; font-size: 12px; color: var(--muted); }
+.cnt { display: inline-flex; gap: 14px; font: 500 13px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cnt span { display: inline-flex; align-items: center; gap: 6px; }
+.cnt .z { color: var(--muted); }
+.pat { font-size: 13px; }
+
+/* Agenda */
+.agenda { display: grid; gap: 28px; }
+.month { display: grid; gap: 0; }
+.month > h3 { margin: 0 0 4px; font: 800 1.9rem/1 var(--display); text-transform: uppercase; letter-spacing: .02em; display: flex; align-items: baseline; gap: 10px; }
+.month > h3 small { font: 500 12px var(--mono); letter-spacing: .08em; color: var(--muted); }
+.ev {
+  display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 4px 20px;
+  padding: 14px 0; border-top: 1px solid var(--line);
+}
+.ev.flash { animation: flash 1.4s ease-out; }
+@keyframes flash { from { background: color-mix(in srgb, var(--accent) 18%, transparent); } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .ev.flash { animation: none; } .mk:hover { transform: none; } .mk.pr:hover { transform: rotate(45deg); } }
+.when { font-family: var(--mono); }
+.when b { display: block; font-weight: 500; font-size: 14px; line-height: 1.3; }
+.when span { font-size: 12px; color: var(--muted); }
+.what { min-width: 0; display: grid; gap: 6px; }
+.what h4 { margin: 0; font: 600 1.05rem/1.25 var(--body); text-wrap: balance; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 13px; color: var(--muted); }
+.tag { display: inline-flex; align-items: center; gap: 6px; font: 500 12px var(--mono); color: var(--fg); }
+.tag::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+.st { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; }
+.st.c { background: var(--fg); color: var(--bg); }
+.st.e { border: 1px dashed var(--muted); color: var(--muted); }
+.basis { font-size: 13px; color: var(--muted); max-width: 70ch; }
+.empty { padding: 20px 0; color: var(--muted); border-top: 1px solid var(--line); }
+
+/* Notes */
+.notes { display: grid; gap: 0; }
+.note { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 12px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.note .tags { display: flex; gap: 10px; flex: none; min-width: 6.5rem; }
+.note p { margin: 0; flex: 1 1 18rem; min-width: 0; }
+.src { font-size: 13px; color: var(--muted); display: grid; gap: 8px; }
+.src ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.src a { color: var(--fg); text-underline-offset: 3px; }
+
+@media (max-width: 560px) {
+  .ev { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .when b { display: inline; margin-right: 8px; }
+}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">Amateur boxing · Boxing Australia and state associations · checked 27 Oct 2026</div>
+    <h1>Yeghani Boxing Plan Analysis</h1>
+    <p class="lede">Nothing is published for 2027 yet. This page shows what is confirmed for late 2026 and where each recurring event usually lands in 2027, split by state and territory, and by whether an association or a league runs it.</p>
+    <div class="legend" aria-label="Legend">
+      <span><i class="mk" style="--c: var(--fg); width:12px; height:12px; display:inline-block"></i> Confirmed on an association calendar</span>
+      <span><i class="mk e" style="--c: var(--fg); width:12px; height:12px; display:inline-block"></i> Expected, based on past years</span>
+      <span><i class="mk" style="--c: var(--fg); width:12px; height:12px; display:inline-block"></i> Association: Boxing Australia and state bodies</span>
+      <span><i class="mk lg" style="--c: var(--fg); width:12px; height:12px; display:inline-block"></i> League: VABL, ANABA, promoter series and club shows</span>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Page sections">
+    <button type="button" class="tab" role="tab" id="tab-btn-cal" data-tab="cal" aria-selected="true"><span class="tl">Calendar <b class="tn" id="n-cal"></b></span><span class="tm" id="m-cal"></span></button>
+    <button type="button" class="tab" role="tab" id="tab-btn-fly" data-tab="fly" aria-selected="false"><span class="tl">Women's flyweight ladder <b class="tn" id="n-fly"></b></span><span class="tm" id="m-fly"></span></button>
+    <button type="button" class="tab" role="tab" id="tab-btn-gym" data-tab="gym" aria-selected="false"><span class="tl">Boxing gyms <b class="tn" id="n-gym"></b></span><span class="tm" id="m-gym"></span></button>
+    <button type="button" class="tab" role="tab" id="tab-btn-off" data-tab="off" aria-selected="false"><span class="tl">Matchmaking contacts <b class="tn" id="n-off"></b></span><span class="tm" id="m-off"></span></button>
+  </div>
+
+  <section class="controls" aria-label="Filters">
+    <div class="chips" id="chips"></div>
+    <div class="row-tools">
+      <div class="seg" id="seg-status" role="group" aria-label="Status">
+        <button type="button" data-mode="all" aria-pressed="true">All</button>
+        <button type="button" data-mode="c" aria-pressed="false">Confirmed</button>
+        <button type="button" data-mode="e" aria-pressed="false">Expected</button>
+      </div>
+      <div class="seg" id="seg-body" role="group" aria-label="Organiser">
+        <button type="button" data-body="all" aria-pressed="true">Any organiser</button>
+        <button type="button" data-body="assoc" aria-pressed="false">Association</button>
+        <button type="button" data-body="league" aria-pressed="false">League</button>
+      </div>
+      <div class="seg" id="seg-year" role="group" aria-label="Year">
+        <button type="button" data-year="all" aria-pressed="true">2026 and 2027</button>
+        <button type="button" data-year="2026" aria-pressed="false">2026</button>
+        <button type="button" data-year="2027" aria-pressed="false">2027</button>
+      </div>
+      <button type="button" class="link-btn" id="all-on">Show every state</button>
+    </div>
+  </section>
+
+  <section class="tab-cal" aria-labelledby="mx-h">
+    <div class="panel-h">
+      <h2 id="mx-h">State by month</h2>
+      <span class="hint">Select a marker to jump to the event.</span>
+    </div>
+    <div class="matrix-scroll"><table class="matrix" id="matrix"></table></div>
+  </section>
+
+  <section class="tab-cal" aria-labelledby="ag-h">
+    <div class="panel-h">
+      <h2 id="ag-h">Agenda</h2>
+      <span class="hint" id="ag-count"></span>
+    </div>
+    <div class="agenda" id="agenda"></div>
+  </section>
+
+  <section class="tab-fly" aria-labelledby="ld-h" hidden>
+    <div class="panel-h">
+      <h2 id="ld-h">Women's flyweight ladder</h2>
+      <span class="hint" id="ld-count"></span>
+    </div>
+    <p class="lad-sum" id="ld-sum"></p>
+    <div class="lad-scroll"><table class="lad" id="ladder"></table></div>
+    <p class="hint" style="margin:10px 0 0; max-width:70ch">League here means any event not run by Boxing Australia or a state association: VABL, ANABA, promoter series and club shows. Ranks are from the BoxRec national ladder (23 boxers). Counts cover only the bouts visible on each profile, which are often a few of a longer record. Names for ranks 1, 2, 5 and 8 were matched by record because the profile crop did not show them. Rank 12 was not checked.</p>
+  </section>
+
+  <section class="tab-gym" aria-labelledby="gy-h" hidden>
+    <div class="panel-h">
+      <h2 id="gy-h">Boxing gyms</h2>
+      <span class="hint" id="gy-count"></span>
+    </div>
+    <p class="lad-sum" id="gy-sum"></p>
+    <div class="lad-scroll"><table class="lad" id="gyms"></table></div>
+    <p class="hint" style="margin:10px 0 0; max-width:70ch">These are the gyms named on the flyweight ladder. A number appears only when a listing showed the whole number. Gyms with nothing here are usually small clubs that list contact details on Facebook or Instagram, which I could not open. Call the state association if you cannot reach a club.</p>
+  </section>
+
+  <section class="tab-off" aria-labelledby="of-h" hidden>
+    <div class="panel-h">
+      <h2 id="of-h">Who to call for matchmaking</h2>
+      <span class="hint" id="of-count"></span>
+    </div>
+    <p class="lad-sum" id="of-sum"></p>
+    <div class="lad-scroll"><table class="lad" id="officials"></table></div>
+    <p class="hint" style="margin:10px 0 0; max-width:70ch">Details come from each body's own contact page, read on 27 October 2026. Only Boxing Victoria names a matchmaker. Everywhere else the contact is the secretary or a general inbox, so ask for whoever arranges bouts. Leagues usually arrange bouts through the promoter or the club running the card, so for a league show call the organiser listed on the event.</p>
+  </section>
+
+  <section class="tab-cal" aria-labelledby="on-h">
+    <div class="panel-h"><h2 id="on-h">Running through the year</h2><span class="hint">Regular activity without a single date</span></div>
+    <div class="notes" id="notes"></div>
+  </section>
+
+  <section class="src" aria-labelledby="sr-h">
+    <h2 id="sr-h">Sources</h2>
+    <ul>
+      <li><a href="https://www.boxing.org.au/events/">Boxing Australia events calendar</a></li>
+      <li><a href="https://www.boxing.org.au/news/2026-boxing-australia-selection-events">Boxing Australia, 2026 Selection Events</a></li>
+      <li><a href="https://www.boxingvic.org.au/events">Boxing Victoria events</a></li>
+      <li><a href="https://vabl.com.au/">Victorian Amateur Boxing League (VABL) tournament calendar</a></li>
+      <li><a href="http://amateur-boxing.strefa.pl/Nationalchamps/Australia.html">Australian championships history</a></li>
+      <li><a href="https://www.eventbrite.com.au/d/australia--perth--4807/boxing/">WA State Titles listing</a>, <a href="https://www.sport.nsw.gov.au/combatsports/permits/received">NSW combat sports permits</a></li>
+      <li>BoxRec amateur profiles of the 22 women's flyweights on the national ladder (2025 and 2026 bouts)</li>
+      <li>Gym details: <a href="https://playsport.com/lionsdenboxingacademyderrimut_ag_2457acb7">PlaySport</a>, <a href="https://kidsbook.com.au/p/eastsideboxinggym">Kidsbook</a>, <a href="https://www.tapology.com/gyms/6721-element-jiu-jitsu">Tapology</a>, <a href="https://regionillawarra.com.au/how-this-dapto-boxing-gym-punches-far-above-its-weight/66990/">Region Illawarra</a>, <a href="https://www.moretondaily.com.au/news/all-star-boxing-opens-new-academy-gym-at-showgrounds">Moreton Daily</a></li>
+    </ul>
+    <p style="margin:0">Expected dates repeat the timing of earlier editions and can move. Check the association sites for the real dates once they are posted.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  var STATES = [
+    { k: 'NAT', label: 'National' },
+    { k: 'INT', label: 'International' },
+    { k: 'VIC', label: 'Victoria' },
+    { k: 'NSW', label: 'New South Wales' },
+    { k: 'QLD', label: 'Queensland' },
+    { k: 'WA',  label: 'Western Australia' },
+    { k: 'SA',  label: 'South Australia' },
+    { k: 'TAS', label: 'Tasmania' },
+    { k: 'ACT', label: 'ACT' },
+    { k: 'NT',  label: 'Northern Territory' }
+  ];
+  var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var MFULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  var EVENTS = [
+    { id: 'bcc', name: 'Boxing Victoria Bronze Coach Course', states: ['VIC'], start: '2026-11-07', end: '2026-11-08', where: 'Coburg, Victoria', status: 'c' },
+    { id: 'pen', name: 'Peninsula Cup 2026', states: ['VIC'], start: '2026-11-08', where: 'Whitehorse Club, Burwood', status: 'c' },
+    { id: 'bvi1', name: 'BVI Tournament', states: ['VIC'], start: '2026-11-14', where: 'Whitehorse Club, Burwood', status: 'c' },
+    { id: 'bass', name: 'Bass Strait Cup, Victoria v Tasmania', states: ['VIC', 'TAS'], start: '2026-11-21', where: 'Leongatha Memorial Hall', status: 'c' },
+    { id: 'elite26', name: '2026 Australian Elite Boxing Championships', states: ['NAT'], start: '2026-11-25', end: '2026-11-28', where: 'AIS Combat Centre, Canberra', status: 'c' },
+    { id: 'wbcf', name: 'World Boxing Cup Finals', states: ['INT'], start: '2026-11-25', end: '2026-12-02', where: 'Tashkent, Uzbekistan', status: 'c' },
+    { id: 'bvi2', name: 'BVI Night Show', states: ['VIC'], start: '2026-12-12', where: 'Whitehorse Club, Burwood', status: 'c', basis: 'Fight nominations were not open yet when checked.' },
+
+    { id: 'sel', name: 'National Selection Events', states: ['NAT'], start: '2027-01', end: '2027-02', where: 'AIS, Canberra (2026 venue)', status: 'e', basis: '2026: elite women from 20 Jan, elite men 7 to 13 Feb. Boxing Australia changed the format for 2026, so 2027 may differ.' },
+    { id: 'qnov', name: 'Queensland Novice Championships', states: ['QLD'], start: '2027-02', where: 'Eagles Sports Complex, Mansfield (2026 venue)', status: 'e', basis: '2026: finals were held in February.' },
+    { id: 'club', name: 'Australian Club Championships', states: ['NAT', 'SA'], start: '2027-05', where: 'Dom Polski Centre, Adelaide (2026 venue)', status: 'e', basis: '2026: finals were held in May at the Dom Polski Centre.' },
+    { id: 'qgg', name: 'Boxing Queensland Open Golden Gloves', states: ['QLD'], start: '2027-08', where: 'Nissan Arena, Nathan (2026 venue)', status: 'e', basis: '2026: held in August. An older listing showed 5 May, so the month can move.' },
+    { id: 'nswt', name: 'NSW State and Novice Championships', states: ['NSW'], start: '2027-09', where: 'Hudson Hotel, Seven Hills (2026 venue)', status: 'e', basis: '2026: finals were held in September.' },
+    { id: 'bsa', name: 'Boxing SA Matched Bouts', states: ['SA'], start: '2027-02', where: 'Marion Centre, Morphettville (2026 venue)', status: 'e', basis: '2026: a matched-bouts card was held in February. BSA is probably Boxing SA.' },
+    { id: 'mont', name: 'Elite Montenegro Cup', states: ['INT'], start: '2027-03', where: 'Budva, Montenegro (2026 venue)', status: 'e', basis: '2026: held in March, with an Australian boxer entered.' },
+    { id: 'bocs', name: 'Istvan Bocskai Memorial Tournament', states: ['INT'], start: '2027-03', where: 'Debrecen, Hungary (2026 venue)', status: 'e', basis: '2026: held in March, with an Australian boxer in the preliminaries.' },
+    { id: 'ssc', name: 'Sunshine Coast Regional Championships', states: ['QLD'], start: '2027-03', where: 'Noosa District State High School, Cooroy (2026 venue)', status: 'e', basis: '2026: Elite D bouts were held in March.' },
+    { id: 'ring', name: 'King of the Ring and Queen of the Ring', states: ['NSW'], start: '2027-04', where: 'Bernie Mullane Sports Complex, Kellyville (2026 venue)', status: 'e', basis: '2026: both were held in April.' },
+    { id: 'silk', name: 'Great Silk Way', states: ['INT'], start: '2027-04', where: 'Baku, Azerbaijan (2026 venue)', status: 'e', basis: '2026: held in April, with Australian boxers entered.' },
+    { id: 'legacy', name: 'Womens Legacy Tournament', states: ['ACT'], start: '2027-05', where: 'Canberra (2026 venue not shown)', status: 'e', basis: '2026: held in May in Canberra.' },
+    { id: 'ind', name: 'Australia v India Match', states: ['VIC'], start: '2027-05', where: 'Veneto Club, Bulleen (2026 venue)', status: 'e', basis: '2026: an international dual meet in May. It may not repeat.' },
+    { id: 'soo', name: 'State of Origin Tournament', states: ['QLD'], start: '2027-08', where: 'Lonestar Tavern, Mermaid Waters (2026 venue)', status: 'e', basis: '2026: held in August on the Gold Coast.' },
+    { id: 'mat', name: 'Matrix Gym Open Tournament', states: ['QLD'], start: '2027-11', where: 'Southport Tigers Rugby League Club (2025 venue)', status: 'e', basis: '2025: held on 15 November.' },
+    { id: 'wa', name: 'WA State Titles', states: ['WA'], start: '2027-09', where: 'Perth Convention and Exhibition Centre (2026 venue)', status: 'e', basis: '2026: 27 September.' },
+    { id: 'vice', name: 'Victorian Elite Open Titles', states: ['VIC'], start: '2027-10', where: 'Whitehorse Club, Burwood (2026 venue)', status: 'e', basis: '2026: 2 to 4 October.' },
+    { id: 'elite27', name: '2027 Australian Elite Boxing Championships', states: ['NAT'], start: '2027-11', where: 'Host to be announced', status: 'e', basis: 'Recent years: Canberra Nov 2024, Brisbane Nov 2025, Canberra Nov 2026.' },
+    { id: 'wbch', name: 'World Boxing Championships', states: ['INT'], start: null, where: 'Host to be announced', status: 'e', basis: 'Held every two years. The 2025 edition was in Liverpool. Host and dates for 2027 are not announced.' }
+  ];
+
+  var VABLB = 'From the VABL tournament calendar, which may be out of date. Check vabl.com.au.';
+  EVENTS.push(
+    { id: 'anaba', name: 'ANABA Australian Elite Championships', states: ['NAT', 'NSW'], start: '2026-10-31', where: 'Sydney, NSW (venue not shown)', status: 'c', basis: VABLB },
+    { id: 'vabl1', name: 'VABL Novice and Open Tournament', states: ['VIC'], start: '2026-11-07', where: 'Lilydale, Victoria', status: 'c', basis: VABLB },
+    { id: 'vabl2', name: 'VABL and BoxSafe Fight Night', states: ['VIC'], start: '2026-11-14', where: 'HIIT Hard Boxing, Victoria', status: 'c', basis: VABLB },
+    { id: 'vabl3', name: 'Showdown at the Allies 2', states: ['VIC'], start: '2026-11-14', where: 'Allies Hotel, Myers Flat', status: 'c', basis: VABLB },
+    { id: 'vabl4', name: 'Masters Classic III', states: ['VIC'], start: '2026-11-14', where: 'Masters Boxing Victoria (venue not shown)', status: 'c', basis: VABLB },
+    { id: 'rise', name: 'Rise: Future Stars', states: ['NSW'], start: '2027-07', where: 'Tamworth Regional Entertainment and Conference Centre (2026 venue)', status: 'e', basis: '2026: 4 July, a pro-am card that included ANABA-sanctioned selection bouts.' }
+  );
+  var VABLX = '2026: held in November. The VABL calendar may be out of date, so check vabl.com.au.';
+  EVENTS.push(
+    { id: 'bcc27', name: 'Boxing Victoria Bronze Coach Course', states: ['VIC'], start: '2027-11', where: 'Coburg, Victoria (2026 venue)', status: 'e', basis: '2026: 7 to 8 November. Coach courses run several times a year.' },
+    { id: 'pen27', name: 'Peninsula Cup', states: ['VIC'], start: '2027-11', where: 'Whitehorse Club, Burwood (2026 venue)', status: 'e', basis: '2026: 8 November.' },
+    { id: 'bvi27', name: 'BVI matched bouts, tournaments and night shows', states: ['VIC'], start: '2027-03', end: '2027-12', where: 'Whitehorse Club, East Burwood (2026 venue)', status: 'e', basis: '2026: matched bouts in March, April and August, then tournaments on 24 Oct and 14 Nov and a night show on 12 Dec.' },
+    { id: 'anaba27', name: 'ANABA Australian Elite Championships', states: ['NAT', 'NSW'], start: '2027-10', where: 'Host to be announced', status: 'e', basis: '2026: listed for 31 October in Sydney. ' + VABLX.replace('2026: held in November. ', '') },
+    { id: 'vablnov', name: 'VABL Novice and Open Tournament', states: ['VIC'], start: '2027-11', where: 'Lilydale, Victoria (2026 venue)', status: 'e', basis: '2026: 7 November. The VABL calendar may be out of date, so check vabl.com.au.' },
+    { id: 'vablfn', name: 'VABL and BoxSafe Fight Night', states: ['VIC'], start: '2027-11', where: 'HIIT Hard Boxing, Victoria (2026 venue)', status: 'e', basis: '2026: 14 November. ' + VABLX.replace('2026: held in November. ', '') },
+    { id: 'allies', name: 'Showdown at the Allies', states: ['VIC'], start: '2027-11', where: 'Allies Hotel, Myers Flat (2026 venue)', status: 'e', basis: '2026: 14 November (the second Showdown). ' + VABLX.replace('2026: held in November. ', '') },
+    { id: 'mclass', name: 'Masters Classic', states: ['VIC'], start: '2027-11', where: 'Masters Boxing Victoria (2026 venue not shown)', status: 'e', basis: '2026: 14 November (the third Masters Classic). ' + VABLX.replace('2026: held in November. ', '') },
+    { id: 'wbcf27', name: 'World Boxing Cup Finals', states: ['INT'], start: '2027-11', where: 'Host to be announced', status: 'e', basis: '2025: invite-only Finals in India. 2026: Tashkent, 25 Nov to 2 Dec.' },
+    { id: 'nxt', name: 'Next Generation and NXTGEN fight nights', states: ['NSW'], start: '2027-03', end: '2027-07', where: 'Sydney Portugal Community Club, Marrickville (2026 venue)', status: 'e', basis: '2026: NXT Generation Fight Night #7 in March, Next Generation Round 8 in May, NXTGEN Hard Knock Academy #2 in July.' },
+    { id: 'paddo', name: 'Paddo Punch On', states: ['NSW'], start: '2027-03', end: '2027-05', where: 'Paddington Woollahra RSL Club (2026 venue)', status: 'e', basis: '2026: #18 in March and #19 in May.' },
+    { id: 'polish', name: 'Polish Club Fight Night and Combat Promotions', states: ['NSW'], start: '2027-06', end: '2027-07', where: 'Polish Association Centre, Keiraville (2026 venue)', status: 'e', basis: '2026: a fight night in June and a Combat Promotions card in July.' },
+    { id: 'bxc', name: 'BXC Promotions card', states: ['NSW'], start: '2027-07', where: 'Boxclass Gym, Smithfield (2026 venue)', status: 'e', basis: '2026: July.' },
+    { id: 'ballina', name: 'Ballina Boxing Gym Fight Night', states: ['NSW'], start: '2027-05', where: 'Cultural Centre, Lennox Head (2026 venue)', status: 'e', basis: '2026: Fight Night #2 (Elite) in May.' },
+    { id: 'fk', name: 'FiteKlub Boxing Card', states: ['QLD'], start: '2027-04', where: 'Lonestar Tavern, Mermaid Waters (2026 venue)', status: 'e', basis: '2026: April.' },
+    { id: 'nodeal', name: 'No Deal Boxing Club Card', states: ['QLD'], start: '2027-04', where: 'Alexandra Hills Hotel (2026 venue)', status: 'e', basis: '2026: April.' },
+    { id: 'cairns', name: 'Cairns Box Cup', states: ['QLD'], start: '2027-06', where: 'Early Settler Stadium, Manunda (2025 venue)', status: 'e', basis: '2025: 7 June, a Boxing Queensland-sanctioned event.' },
+    { id: 'tascards', name: 'George Town and Latrobe club cards', states: ['TAS'], start: '2027-05', where: 'Graham Fairless Centre, George Town and Memorial Hall, Latrobe (2026 venues)', status: 'e', basis: '2026: a George Town Boxing Club card and a Team Woods Boxing Club card, both in May.' }
+  );
+  var BODY = {
+    assoc: ['bcc','pen','bvi1','bass','elite26','wbcf','bvi2','sel','qnov','qgg','nswt','bsa','mont','bocs','silk','ssc','wa','vice','elite27','wbch','club','bcc27','pen27','bvi27','wbcf27','cairns'],
+    league: ['anaba','vabl1','vabl2','vabl3','vabl4','rise','ring','legacy','ind','soo','mat','anaba27','vablnov','vablfn','allies','mclass','nxt','paddo','polish','bxc','ballina','fk','nodeal','tascards']
+  };
+  // Organiser not confirmed from the sources seen; shown as a caution on the event.
+  var CHK = ['qnov','nswt','bsa','mont','bocs','silk','ssc','wa','club','ring','legacy','ind','soo','mat','nxt','paddo','polish','bxc','ballina','fk','nodeal','tascards'];
+  var BL = { assoc: 'Association', league: 'League' };
+  EVENTS.forEach(function (e) {
+    Object.keys(BODY).forEach(function (k) { if (BODY[k].indexOf(e.id) > -1) e.body = k; });
+    e.chk = CHK.indexOf(e.id) > -1;
+  });
+
+  var NOTES = [
+    { s: ['VIC', 'NAT', 'NSW'], t: 'Two leagues run beside the associations. VABL in Victoria and ANABA nationally hold their own tournaments and an elite championships (ANABA’s was listed for 31 Oct 2026), separate from Boxing Australia’s Elite Championships on 25 to 28 Nov.' },
+    { s: ['VIC'], t: 'Boxing Victoria runs BVI tournaments and night shows at the Whitehorse Club most months, plus regional shows such as Leongatha.' },
+    { s: ['NSW'], t: 'Boxing NSW amateur shows are permitted across the state most months. The NSW permit register lists them by promoter. In 2026, numbered club series such as Next Generation and Paddo Punch On ran at Marrickville and Paddington nearly every month, and the State and Novice Championships ran in September.' },
+    { s: ['QLD'], t: 'Boxing Queensland sanctions club events around the state, for example the Cairns Box Cup in June 2025.' },
+    { s: ['SA'], t: 'Boxing SA runs matched-bouts shows (one at Morphettville in February 2026) and interstate cups such as the SA v Vic Border Challenge.' },
+    { s: ['TAS'], t: 'Tasmanian clubs run their own cards (George Town and Latrobe in May 2026) and travel to Victoria for BVI matched bouts.' },
+    { s: ['ACT', 'NT'], t: 'The AIS in Canberra hosts national camps and selection events. No dated events were found for the NT.' }
+  ];
+
+  // Months shown in the matrix: Oct 2026 to Dec 2027
+  var MONTHS = [];
+  for (var i = 0; i < 15; i++) {
+    var y = 2026 + Math.floor((9 + i) / 12), m = (9 + i) % 12;
+    MONTHS.push(y + '-' + (m < 9 ? '0' : '') + (m + 1));
+  }
+  var NOW = '2026-10';
+
+  var on = {}; STATES.forEach(function (s) { on[s.k] = true; });
+  var mode = 'all';
+  var bodyMode = 'all';
+  var yearMode = 'all';
+
+  function cv(k) { return 'var(--' + k.toLowerCase() + ')'; }
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function ym(d) { return d.slice(0, 7); }
+  function monthsOf(e) { if (!e.start) return []; var s = ym(e.start), t = ym(e.end || e.start); return MONTHS.filter(function (m) { return m >= s && m <= t; }); }
+  function countFor(k) { return EVENTS.filter(function (e) { return e.states.indexOf(k) > -1; }).length; }
+  function evYear(e) { return e.start ? e.start.slice(0, 4) : '2027'; }
+  function passStatus(e) { return (mode === 'all' || e.status === mode) && (bodyMode === 'all' || e.body === bodyMode) && (yearMode === 'all' || evYear(e) === yearMode); }
+  function bodyPill(e) {
+    return '<span class="bd">' + BL[e.body] + '</span>' + (e.chk ? '<span class="chk">organiser not confirmed</span>' : '');
+  }
+  function passState(e) { return e.states.some(function (s) { return on[s]; }); }
+
+  function when(e) {
+    if (!e.start) return { main: 'TBA', sub: '2027 · expected' };
+    var a = e.start.split('-'), y = a[0];
+    if (e.start.length === 7) {
+      var m1 = MN[+a[1] - 1], m2 = e.end ? MN[+e.end.split('-')[1] - 1] : m1;
+      return { main: m1 === m2 ? m1 : m1 + ' to ' + m2, sub: y + ' · typical timing' };
+    }
+    var d1 = +a[2], mo1 = MN[+a[1] - 1];
+    if (!e.end || e.end === e.start) return { main: d1 + ' ' + mo1, sub: y };
+    var b = e.end.split('-'), d2 = +b[2], mo2 = MN[+b[1] - 1];
+    return { main: mo1 === mo2 ? d1 + '–' + d2 + ' ' + mo1 : d1 + ' ' + mo1 + ' – ' + d2 + ' ' + mo2, sub: y };
+  }
+
+  function tags(keys) {
+    return keys.map(function (k) { return '<span class="tag" style="--c:' + cv(k) + '">' + k + '</span>'; }).join('');
+  }
+
+  function renderChips() {
+    var box = document.getElementById('chips'); box.innerHTML = '';
+    STATES.forEach(function (s) {
+      var b = el('button', 'chip');
+      b.type = 'button'; b.setAttribute('aria-pressed', on[s.k] ? 'true' : 'false');
+      b.innerHTML = '<span class="dot-sw" style="--c:' + cv(s.k) + '"></span>' + s.label + ' <span class="n">' + countFor(s.k) + '</span>';
+      b.addEventListener('click', function () { on[s.k] = !on[s.k]; render(); });
+      box.appendChild(b);
+    });
+  }
+
+  function renderMatrix() {
+    var t = document.getElementById('matrix'); t.innerHTML = '';
+    var head = '<thead><tr><th scope="col"><span class="sr" style="position:absolute;left:-9999px">State</span></th>';
+    MONTHS.forEach(function (m) {
+      var mm = +m.slice(5), first = mm === 1 || m === MONTHS[0];
+      head += '<th scope="col" class="' + (m === NOW ? 'now' : '') + (first ? ' yr' : '') + '">' + MN[mm - 1].toUpperCase() + (first ? '<br>' + m.slice(0, 4) : '<br>&nbsp;') + '</th>';
+    });
+    t.insertAdjacentHTML('beforeend', head + '</tr></thead>');
+    var body = el('tbody');
+    STATES.forEach(function (s) {
+      var tr = el('tr', on[s.k] ? '' : 'off');
+      var n = countFor(s.k);
+      tr.innerHTML = '<th scope="row"><span class="lab"><span class="dot-sw" style="--c:' + cv(s.k) + '"></span>' + s.label + (n ? '' : ' <span class="zero">no dates</span>') + '</span></th>';
+      MONTHS.forEach(function (m) {
+        var td = el('td'), cell = el('div', 'cell');
+        EVENTS.forEach(function (e) {
+          if (e.states.indexOf(s.k) > -1 && passStatus(e) && monthsOf(e).indexOf(m) > -1) {
+            var b = el('button', 'mk' + (e.status === 'e' ? ' e' : '') + (e.body === 'league' ? ' lg' : e.body === 'promo' ? ' pr' : ''));
+            b.type = 'button'; b.style.setProperty('--c', cv(s.k));
+            b.title = e.name; b.setAttribute('aria-label', s.label + ': ' + e.name + ' (' + BL[e.body] + (e.status === 'e' ? ', expected' : '') + ')');
+            b.addEventListener('click', function () { jump(e.id); });
+            cell.appendChild(b);
+          }
+        });
+        td.appendChild(cell); tr.appendChild(td);
+      });
+      body.appendChild(tr);
+    });
+    t.appendChild(body);
+  }
+
+  function evNode(e) {
+    var w = when(e), art = el('article', 'ev'); art.id = 'ev-' + e.id;
+    art.innerHTML =
+      '<div class="when"><b>' + w.main + '</b><span>' + w.sub + '</span></div>' +
+      '<div class="what"><h4>' + e.name + '</h4>' +
+      '<div class="meta">' + tags(e.states) + '<span>' + e.where + '</span>' + bodyPill(e) +
+      '<span class="st ' + e.status + '">' + (e.status === 'c' ? 'Confirmed' : 'Expected') + '</span></div>' +
+      (e.basis ? '<div class="basis">' + e.basis + '</div>' : '') + '</div>';
+    return art;
+  }
+
+  function renderAgenda() {
+    var box = document.getElementById('agenda'); box.innerHTML = '';
+    var list = EVENTS.filter(function (e) { return passState(e) && passStatus(e); });
+    document.getElementById('ag-count').textContent = list.length + (list.length === 1 ? ' event' : ' events') + ' shown';
+    if (!list.length) { box.appendChild(el('div', 'empty', 'No events match these filters. Turn on another state or switch the status to All.')); return; }
+    var dated = list.filter(function (e) { return e.start; }).sort(function (a, b) { return a.start < b.start ? -1 : a.start > b.start ? 1 : 0; });
+    var groups = {}, order = [];
+    dated.forEach(function (e) { var k = ym(e.start); if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(e); });
+    order.forEach(function (k) {
+      var sec = el('section', 'month'), mm = +k.slice(5);
+      sec.appendChild(el('h3', '', MFULL[mm - 1] + ' <small>' + k.slice(0, 4) + '</small>'));
+      groups[k].forEach(function (e) { sec.appendChild(evNode(e)); });
+      box.appendChild(sec);
+    });
+    var und = list.filter(function (e) { return !e.start; });
+    if (und.length) {
+      var s2 = el('section', 'month'); s2.appendChild(el('h3', '', 'Date to be announced'));
+      und.forEach(function (e) { s2.appendChild(evNode(e)); });
+      box.appendChild(s2);
+    }
+  }
+
+  function renderNotes() {
+    var box = document.getElementById('notes'); box.innerHTML = '';
+    NOTES.filter(function (n) { return n.s.some(function (k) { return on[k]; }); }).forEach(function (n) {
+      var d = el('div', 'note');
+      d.innerHTML = '<div class="tags">' + tags(n.s) + '</div><p>' + n.t + '</p>';
+      box.appendChild(d);
+    });
+  }
+
+  function jump(id) {
+    var n = document.getElementById('ev-' + id);
+    if (!n) return;
+    try { n.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) { n.scrollIntoView(); }
+    n.classList.remove('flash'); void n.offsetWidth; n.classList.add('flash');
+  }
+
+  // Ladder: a = association events, l = league events, p = club or promoter shows, among bouts visible on each profile.
+  var LADDER = [
+    { r: 1, n: 'Elisha Kumar', rec: '35-9-0', st: 'NSW', loc: 'Sydney', gym: '', a: 11, l: 0, p: 1, of: 45 },
+    { r: 2, n: 'Alana Selak', rec: '17-16-0', st: 'NSW', loc: 'Illawarra', gym: 'Crockers Boxing Gym', a: 5, l: 0, p: 0, of: 33 },
+    { r: 3, n: 'Daniela Aquino', rec: '7-4-0', st: 'NSW', loc: 'Sydney', gym: 'Box Fuller', a: 1, l: 0, p: 3, of: 11 },
+    { r: 4, n: 'Catherine Santos', rec: '6-1-0', st: 'SA', loc: 'Adelaide', gym: 'Forged Warriors Academy', a: 1, l: 0, p: 0, of: 7 },
+    { r: 5, n: 'April Littlejohn', rec: '7-5-0', st: 'TAS', loc: 'George Town', gym: 'George Town Boxing', a: 4, l: 0, p: 2, of: 12 },
+    { r: 6, n: 'Clarissa Smith', rec: '2-0-0', st: 'VIC', loc: 'Ballarat', gym: 'Brawl Boxing', a: 0, l: 0, p: 2, of: 2 },
+    { r: 7, n: 'Si Hua Huang', rec: '2-8-0', st: 'NSW', loc: 'Sydney', gym: 'Southside Boxing', a: 1, l: 0, p: 2, of: 10 },
+    { r: 8, n: 'Xotchilt Rodriguez', rec: '4-3-0', st: 'QLD', loc: 'Brisbane', gym: 'Eastside Boxing Gym', a: 2, l: 0, p: 1, of: 7 },
+    { r: 9, n: 'Elysia Roach', rec: '4-5-0', st: 'NSW', loc: 'Sydney', gym: 'NXTGEN Boxing Club', a: 2, l: 0, p: 5, of: 9 },
+    { r: 10, n: 'Josephine Green', rec: '4-5-0', st: 'QLD', loc: 'Gold Coast', gym: 'FiteKlub Fitness', a: 4, l: 0, p: 2, of: 9 },
+    { r: 11, n: 'Amelia Thomas', rec: '2-2-0', st: 'NSW', loc: 'Sydney', gym: 'Box Fuller', a: 1, l: 0, p: 1, of: 4 },
+    { r: 12, n: 'Sania Haidari', rec: '1-0-0', st: null, loc: 'Australia', gym: '', a: 0, l: 0, p: 0, of: 1, none: true },
+    { r: 13, n: 'Josie Yuan', rec: '1-2-0', st: 'NSW', loc: 'Sydney', gym: 'Team L.A.U Boxing and Kickboxing', a: 1, l: 0, p: 1, of: 3 },
+    { r: 14, n: 'Willow Barwick', rec: '2-1-0', st: 'QLD', loc: 'Dysart', gym: 'Dig Deep Competitive Boxing', a: 1, l: 0, p: 0, of: 3 },
+    { r: 15, n: "Sarah O'Shea", rec: '2-1-0', st: 'QLD', loc: 'Redlands', gym: 'Neon Boxing Academy', a: 1, l: 0, p: 0, of: 3 },
+    { r: 16, n: 'Erika Rodriguez', rec: '1-3-0', st: 'NSW', loc: 'Sydney', gym: 'Legends Gym', a: 0, l: 0, p: 2, of: 4 },
+    { r: 17, n: 'Monica Setio', rec: '1-4-0', st: 'NSW', loc: 'Sydney', gym: 'Pad Flow Gym', a: 0, l: 0, p: 2, of: 5 },
+    { r: 18, n: 'Rhianna Kenny', rec: '1-2-0', st: 'QLD', loc: 'Pine Rivers', gym: 'All Star Boxing Academy', a: 1, l: 0, p: 1, of: 3 },
+    { r: 19, n: 'Linda Abed', rec: '1-0-0', st: 'VIC', loc: 'Melbourne', gym: 'Lionsden Boxing Academy', a: 1, l: 0, p: 0, of: 1 },
+    { r: 20, n: 'Zahra Rahimi', rec: '0-1-0', st: null, loc: 'Not listed', gym: '', a: 0, l: 0, p: 1, of: 1 },
+    { r: 21, n: 'Yeganeh Karimfar', rec: '0-1-0', st: 'VIC', loc: 'Melbourne', gym: 'Spartans House of Champions', a: 1, l: 0, p: 0, of: 1 },
+    { r: 22, n: 'Zahra Ahmadi', rec: '0-1-0', st: null, loc: 'Australia', gym: '', a: 0, l: 0, p: 1, of: 1 },
+    { r: 23, n: 'Tabitha Sommers', rec: '0-1-0', st: 'SA', loc: 'Adelaide', gym: 'Element Martial Arts', a: 1, l: 0, p: 0, of: 1 }
+  ];
+
+  // League covers every event not run by Boxing Australia or a state association: VABL, ANABA, promoter series and club shows.
+  LADDER.forEach(function (b) { b.l += b.p; b.p = 0; });
+
+  function pattern(b) {
+    if (b.none) return 'Not checked';
+    if (b.a && b.l) return 'Association and league';
+    if (b.a) return 'Association only';
+    if (b.l) return 'League only';
+    return 'None seen';
+  }
+  function cnt(n, cls, label) {
+    return '<span class="' + (n ? '' : 'z') + '" title="' + label + '"><i class="mk' + cls + '" style="--c: var(--fg); width:10px; height:10px; display:inline-block' + (n ? '' : '; opacity:.35') + '"></i>' + n + '</span>';
+  }
+  function renderLadder() {
+    var t = document.getElementById('ladder'); t.innerHTML = '';
+    var allOn = STATES.every(function (s) { return on[s.k]; });
+    var key = { assoc: 'a', league: 'l', promo: 'p' }[bodyMode];
+    var rows = LADDER.filter(function (b) {
+      var okState = b.st ? on[b.st] : allOn;
+      return okState && (bodyMode === 'all' || b[key] > 0);
+    });
+    var tot = { a: 0, l: 0, p: 0 };
+    LADDER.forEach(function (b) { tot.a += b.a; tot.l += b.l; tot.p += b.p; });
+    document.getElementById('ld-count').textContent = rows.length + ' of ' + LADDER.length + ' boxers shown';
+    var nA = LADDER.filter(function (b) { return b.a > 0; }).length;
+    var nL = LADDER.filter(function (b) { return b.l > 0; }).length;
+    var nB = LADDER.filter(function (b) { return b.a > 0 && b.l > 0; }).length;
+    document.getElementById('ld-sum').textContent =
+      nA + ' boxers had at least one bout at an association event and ' + nL + ' at a league event, with ' + nB + ' in both. ' +
+      'Across the visible bouts there were ' + tot.a + ' at association events and ' + tot.l + ' at league events.';
+    t.insertAdjacentHTML('beforeend', '<thead><tr><th class="num">#</th><th>Boxer</th><th>W-L-D</th><th>State</th><th>Club or gym</th><th>Bouts seen: association, league</th><th>Pattern</th></tr></thead>');
+    var tb = el('tbody');
+    if (!rows.length) {
+      tb.innerHTML = '<tr><td colspan="7" style="color:var(--muted); padding:16px 0">No boxers match. ' + (bodyMode === 'league' ? 'None of the ladder boxers had a bout I could tie to a league.' : 'Turn on another state or change the organiser filter.') + '</td></tr>';
+    }
+    rows.forEach(function (b) {
+      var tr = el('tr');
+      tr.innerHTML =
+        '<td class="num">' + b.r + '</td>' +
+        '<td><span class="nm">' + b.n + '</span><span class="sub">' + b.loc + '</span></td>' +
+        '<td class="num">' + b.rec + '</td>' +
+        '<td>' + (b.st ? tags([b.st]) : '<span class="sub">Not listed</span>') + '</td>' +
+        '<td>' + (b.gym || '<span class="sub">Not listed</span>') + '</td>' +
+        '<td><span class="cnt">' + cnt(b.a, '', 'Association') + cnt(b.l, ' lg', 'League') + '</span><span class="sub">' + (b.none ? 'no profile checked' : 'of ' + b.of + ' on record') + '</span></td>' +
+        '<td class="pat">' + pattern(b) + '</td>';
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  }
+
+  // Gyms named on the ladder. ph: ok = full number seen in a listing, part = listing showed only the start, none = no number found.
+  var GYMS = [
+    { n: 'Crockers Boxing Gym', st: 'NSW', loc: 'Dapto, Illawarra', who: ['#2 Alana Selak'], addr: 'Behind the Dandaloo Hotel, Dapto', ph: 'none', src: ['Region Illawarra', 'https://regionillawarra.com.au/how-this-dapto-boxing-gym-punches-far-above-its-weight/66990/'] },
+    { n: 'Box Fuller', st: 'NSW', loc: 'Sydney', who: ['#3 Daniela Aquino', '#11 Amelia Thomas'], addr: '', ph: 'none' },
+    { n: 'Forged Warriors Academy', st: 'SA', loc: 'Adelaide', who: ['#4 Catherine Santos'], addr: '8/2 Brandwood St, Royal Park SA 5014 (listed as Forged Warriors Muay Thai Adelaide, which may be the same gym)', ph: 'part', start: '0449', src: ['Kidsbook', 'https://kidsbook.com.au/p/forgedwarriorsmuaythaiadelaide'] },
+    { n: 'George Town Boxing', st: 'TAS', loc: 'George Town', who: ['#5 April Littlejohn'], addr: '', ph: 'none' },
+    { n: 'Brawl Boxing', st: 'VIC', loc: 'Ballarat', who: ['#6 Clarissa Smith'], addr: '', ph: 'none' },
+    { n: 'Southside Boxing', st: 'NSW', loc: 'Sutherland', who: ['#7 Si Hua Huang'], addr: '', ph: 'none' },
+    { n: 'Eastside Boxing Gym', st: 'QLD', loc: 'Brisbane', who: ['#8 Xotchilt Rodriguez'], addr: '208 Montague Rd, West End QLD 4101 (likely the same gym)', ph: 'part', start: '0458', src: ['Kidsbook', 'https://kidsbook.com.au/p/eastsideboxinggym'] },
+    { n: 'NXTGEN Boxing Club', st: 'NSW', loc: 'Sydney', who: ['#9 Elysia Roach'], addr: '', ph: 'none' },
+    { n: 'FiteKlub Fitness', st: 'QLD', loc: 'Burleigh Heads, Gold Coast', who: ['#10 Josephine Green'], addr: '25 Hutchinson Rd, Burleigh Heads. Website: www.fiteklub.com.au', ph: 'none', src: ['PlaySport', 'https://playsport.com/fiteklubfitnessburleighfightclubboxingadultskidsweightsgymburleighheadsgoldcoast_ag_3cfd62d1/about'] },
+    { n: 'Team L.A.U Boxing and Kickboxing', st: 'NSW', loc: 'Sydney', who: ['#13 Josie Yuan'], addr: '', ph: 'none' },
+    { n: 'Dig Deep Competitive Boxing', st: 'QLD', loc: 'Dysart', who: ['#14 Willow Barwick'], addr: '', ph: 'none' },
+    { n: 'Neon Boxing Academy', st: 'QLD', loc: 'Redland Bay', who: ["#15 Sarah O'Shea"], addr: '', ph: 'none', ig: 'neonboxingacademy', igNote: 'Named in a Redland Bayside News article' },
+    { n: 'Legends Gym', st: 'NSW', loc: 'Sydney', who: ['#16 Erika Rodriguez'], addr: 'A Legends Gym in Kensington offers boxing classes on ClassPass. I could not confirm it is the same gym.', ph: 'none', src: ['ClassPass', 'https://classpass.com/studios/legends-gym-kensington'] },
+    { n: 'Pad Flow Gym', st: 'NSW', loc: 'Sydney', who: ['#17 Monica Setio'], addr: '', ph: 'none' },
+    { n: 'All Star Boxing Academy', st: 'QLD', loc: 'Pine Rivers, Lawnton', who: ['#18 Rhianna Kenny'], addr: 'Pine Rivers Showgrounds, Gympie Rd, Lawnton. Facebook: facebook.com/allstarboxingacademy', ph: 'none', src: ['Moreton Daily', 'https://www.moretondaily.com.au/news/all-star-boxing-opens-new-academy-gym-at-showgrounds'] },
+    { n: 'Lionsden Boxing Academy Derrimut', st: 'VIC', loc: 'Derrimut, Melbourne', who: ['#19 Linda Abed'], addr: '1/10 Paramount Blvd, Derrimut VIC 3026', ph: 'ok', phone: '0409 489 923', extra: 'derrimut@lionsdenboxing.com.au · www.lionsdenboxing.com.au', src: ['PlaySport', 'https://playsport.com/lionsdenboxingacademyderrimut_ag_2457acb7'], ig: 'lionsdenboxingdelahey', igNote: 'Shown on the Derrimut listing but the name says Delahey, so it may be a sister branch' },
+    { n: 'Spartans House of Champions', st: 'VIC', loc: 'Melbourne', who: ['#21 Yeganeh Karimfar'], addr: '', ph: 'none' },
+    { n: 'Element Martial Arts', st: 'SA', loc: 'Adelaide', who: ['#23 Tabitha Sommers'], addr: '600 Main North Rd, Gepps Cross (Element Martial Arts & Fitness)', ph: 'none', src: ['Tapology', 'https://www.tapology.com/gyms/6721-element-jiu-jitsu'] }
+  ];
+
+  // Contact details found in second pass. Phones come from state body club listings or the club's own site.
+  var NSW = ['Boxing NSW club list', 'https://www.boxingnsw.org.au/clubs'];
+  var QLD = ['Boxing Queensland club list', 'https://www.boxingqueenslandinc.org/clubs'];
+  var PATCH = {
+    'Crockers Boxing Gym': { phone: '0419 987 841', extra: 'Contact: Vito Gaudiosi', src: ['Boxing NSW club page', 'https://www.boxingnsw.org.au/clubs/2231/'] },
+    'Box Fuller': { phone: '0422 481 308', extra: 'boxfuller@gmail.com', addr: 'Trains at Bulldog Gym, Balgowlah (per the club site)', ig: 'box_fuller', igNote: 'Linked on the club website', src: ['Club website', 'https://www.boxfuller.com.au/'] },
+    'NXTGEN Boxing Club': { phone: '0452 327 415', extra: 'info@nxtgenboxing.com.au', addr: '15B Margate Street, Botany NSW 2019', ig: 'nxtgenboxingclub_', igNote: 'Linked on the club website', src: ['Club website', 'https://nxtgenboxing.com.au/'] },
+    'Southside Boxing': { phone: '0411 563 644', extra: 'Listed as Southside Boxing Gym Sutherland', src: NSW },
+    'Team L.A.U Boxing and Kickboxing': { phone: '0431 853 825', extra: 'Website: teamlau.com.au', src: NSW },
+    'Legends Gym': { phone: '02 9663 3774', extra: 'Website: legendsgym.com.au. Listed as Legends Gym; I could not confirm the location', src: NSW },
+    'Neon Boxing Academy': { phone: '0403 016 718', extra: 'Head coach: Leong Lay', addr: '72 Zipfs Rd, Redland Bay (per a MapQuest listing)', src: QLD },
+    'Dig Deep Competitive Boxing': { phone: '0428 607 602', extra: 'Coaches: Shane Reid (Marian), Craig Storch (Dysart)', src: QLD },
+    'All Star Boxing Academy': { phone: '0421 565 962', extra: 'Listed as All Star Boxing', src: QLD },
+    'Eastside Boxing Gym': { phone: '0411 634 781', extra: 'Head coach: Russell Finn. Kidsbook shows a different number starting 0458', src: QLD },
+    'FiteKlub Fitness': { phone: '0406 555 566', extra: 'Contact: Fidel Tukel. Listed as Fiteklub - BHS', src: QLD }
+  };
+  GYMS.forEach(function (g) {
+    var q = PATCH[g.n]; if (!q) return;
+    g.ph = 'ok'; g.phone = q.phone; g.extra = q.extra; g.src = q.src;
+    if (q.addr && !g.addr) g.addr = q.addr;
+    if (q.ig) { g.ig = q.ig; g.igNote = q.igNote; }
+  });
+
+  function renderGyms() {
+    var t = document.getElementById('gyms'); t.innerHTML = '';
+    var rows = GYMS.filter(function (g) { return on[g.st]; });
+    var nOk = GYMS.filter(function (g) { return g.ph === 'ok'; }).length;
+    var nPart = GYMS.filter(function (g) { return g.ph === 'part'; }).length;
+    document.getElementById('gy-count').textContent = rows.length + ' of ' + GYMS.length + ' gyms shown';
+    document.getElementById('gy-sum').textContent =
+      'I found a full phone number for ' + nOk + ' of ' + GYMS.length + ' gyms. ' + nPart + ' listings showed only the start of a number, and ' + (GYMS.length - nOk - nPart) + ' had no number I could find. Instagram accounts found: ' + GYMS.filter(function (g) { return g.ig; }).length + ' of ' + GYMS.length + '.';
+    t.insertAdjacentHTML('beforeend', '<thead><tr><th>Gym</th><th>State</th><th>Ladder boxers</th><th>Address and notes</th><th>Phone</th><th>Instagram</th><th>Source</th></tr></thead>');
+    var tb = el('tbody');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="7" style="color:var(--muted); padding:16px 0">No gyms match. Turn on another state.</td></tr>';
+    rows.forEach(function (g) {
+      var ph = g.ph === 'ok'
+        ? '<span class="num nm">' + g.phone + '</span><span class="sub">' + (g.extra || '') + '</span>'
+        : g.ph === 'part'
+          ? '<span class="sub">Listing shows only “' + g.start + ' …”, not the full number</span>'
+          : '<span class="sub">No number found</span>';
+      var tr = el('tr');
+      tr.innerHTML =
+        '<td><span class="nm">' + g.n + '</span><span class="sub">' + g.loc + '</span></td>' +
+        '<td>' + tags([g.st]) + '</td>' +
+        '<td>' + g.who.join('<br>') + '</td>' +
+        '<td>' + (g.addr || '<span class="sub">Not found</span>') + '</td>' +
+        '<td>' + ph + '</td>' +
+        '<td>' + (g.ig ? '<a href="https://www.instagram.com/' + g.ig + '" style="color:var(--fg); text-underline-offset:3px">@' + g.ig + '</a><span class="sub">' + g.igNote + '</span>' : '<span class="sub">Not found</span>') + '</td>' +
+        '<td>' + (g.src ? '<a href="' + g.src[1] + '" style="color:var(--fg); text-underline-offset:3px">' + g.src[0] + '</a>' : '<span class="sub">None</span>') + '</td>';
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  }
+
+  // Matchmaking contacts. kind: assoc or league. Only details printed on the body's own page.
+  var OFFICIALS = [
+    { org: 'Boxing Victoria', kind: 'assoc', st: 'VIC', role: 'Matchmaker and registrar: Renato Marasco', phone: '+61 412 877 934', email: 'membership@boxingvic.org.au', web: 'https://www.boxingvic.org.au/contact', note: 'Only association contact I found with the matchmaker title.' },
+    { org: 'Boxing NSW', kind: 'assoc', st: 'NSW', role: 'Events and enquiries inbox. No matchmaker named', phone: '0476 851 751', email: 'eo.nsw@boxing.org.au', web: 'https://www.boxingnsw.org.au/contact', note: 'Office phone, Mon to Thu 9am to 5pm. President Sean Fitzpatrick: 0411 563 644, nsw.president@boxing.org.au. Secretary Dean Groth: secretary.nsw@boxing.org.au.' },
+    { org: 'Boxing Queensland', kind: 'assoc', st: 'QLD', role: 'Secretary inbox. No matchmaker or office phone listed', phone: '', email: 'secretary@boxingqueensland.com', web: 'https://www.boxingqueenslandinc.org/clubs', note: 'The club list shows head coaches with phone numbers, so a club coach is another way in.' },
+    { org: 'Boxing SA', kind: 'assoc', st: 'SA', role: 'Secretary: Heather Hughes (registrations and general enquiries)', phone: '0438 131 906', email: 'hethandtony@gmail.com', web: 'https://www.boxingsa.org.au/contact', note: 'No matchmaker listed. President Allison Goodes: 0419 963 406.' },
+    { org: 'Boxing WA', kind: 'assoc', st: 'WA', role: 'General contact. No name or role shown', phone: '0420 770 691', email: 'amandastevenson044@gmail.com', web: 'https://www.boxingwa.org.au/contact/', note: 'The contact page shows no name, so I cannot say who this is. Confirm before relying on it.' },
+    { org: 'Boxing Tasmania', kind: 'assoc', st: 'TAS', role: 'No current contact found', phone: '', email: '', web: 'https://www.boxing.org.au/news/boxing-tasmania-incorporated', note: 'Boxing Australia says Boxing Tasmania Incorporated was deregistered in December 2018. Ask Boxing Australia on info@boxing.org.au.' },
+    { org: 'Boxing ACT and Boxing NT', kind: 'assoc', st: 'NAT', role: 'Contact pages could not be opened', phone: '', email: '', web: 'https://www.boxing.org.au/about/member-associations', note: 'Boxing Australia lists both as member associations. Start with Boxing Australia.' },
+    { org: 'Boxing Australia', kind: 'assoc', st: 'NAT', role: 'National body. Officiating coordinator: Wayne Rose', phone: '', email: 'info@boxing.org.au', web: 'https://www.boxing.org.au/about/officestaff', note: 'No phone on the staff page. Office is at the AIS, Bruce ACT. Use for interstate bouts and states with no listed contact.' },
+    { org: 'VABL (Victorian Amateur Boxing League)', kind: 'league', st: 'VIC', role: 'Contact page opened but showed no names or numbers', phone: '', email: '', web: 'https://vabl.com.au/contact/', note: 'Use the contact form on the site or its Facebook page.' },
+    { org: 'ANABA (national and state sites)', kind: 'league', st: 'NAT', role: 'Sites list events and registration only. No contacts shown', phone: '', email: '', web: 'https://anaba.com.au/faqs/', note: 'State sites: anabansw.com.au and anabaqld.com.au. Use the registration forms or their social pages.' },
+    { org: 'NXTGEN Boxing', kind: 'league', st: 'NSW', role: 'Club and promoter (Botany)', phone: '0452 327 415', email: 'info@nxtgenboxing.com.au', web: 'https://nxtgenboxing.com.au/', note: 'Runs NXT GEN fight nights that are listed on Boxing NSW. Classed as league here because the club runs its own shows.' }
+  ];
+
+  function renderOfficials() {
+    var t = document.getElementById('officials'); t.innerHTML = '';
+    var rows = OFFICIALS.filter(function (o) { return (bodyMode === 'all' || o.kind === bodyMode) && (o.st === 'NAT' || on[o.st]); });
+    document.getElementById('of-count').textContent = rows.length + ' of ' + OFFICIALS.length + ' contacts shown';
+    document.getElementById('of-sum').textContent = 'Association contacts are the state bodies that sanction amateur shows. League contacts run their own events. Use the organiser filter above to switch between them.';
+    t.insertAdjacentHTML('beforeend', '<thead><tr><th>Organisation</th><th>Type</th><th>State</th><th>Who to ask</th><th>Phone</th><th>Email</th><th>Notes</th></tr></thead>');
+    var tb = el('tbody');
+    if (!rows.length) tb.innerHTML = '<tr><td colspan="7" style="color:var(--muted); padding:16px 0">No contacts match. Turn on another state.</td></tr>';
+    rows.forEach(function (o) {
+      var tr = el('tr');
+      tr.innerHTML =
+        '<td><a class="nm" href="' + o.web + '" style="color:var(--fg); text-underline-offset:3px">' + o.org + '</a></td>' +
+        '<td><span class="bd">' + (o.kind === 'assoc' ? 'Association' : 'League') + '</span></td>' +
+        '<td>' + tags([o.st]) + '</td>' +
+        '<td>' + o.role + '</td>' +
+        '<td>' + (o.phone ? '<span class="num nm">' + o.phone + '</span>' : '<span class="sub">None listed</span>') + '</td>' +
+        '<td>' + (o.email ? '<span class="nm" style="word-break:break-all">' + o.email + '</span>' : '<span class="sub">None listed</span>') + '</td>' +
+        '<td><span class="sub">' + o.note + '</span></td>';
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+  }
+
+  function render() { renderChips(); renderMatrix(); renderAgenda(); renderLadder(); renderGyms(); renderOfficials(); renderNotes(); }
+
+  document.querySelectorAll('.seg').forEach(function (g) {
+    g.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (b.hasAttribute('data-mode')) mode = b.getAttribute('data-mode');
+        else if (b.hasAttribute('data-year')) yearMode = b.getAttribute('data-year');
+        else bodyMode = b.getAttribute('data-body');
+        g.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        render();
+      });
+    });
+  });
+  document.getElementById('all-on').addEventListener('click', function () { STATES.forEach(function (s) { on[s.k] = true; }); render(); });
+
+  function applyTab() {
+    var tab = location.hash === '#flyweight' ? 'fly' : location.hash === '#gyms' ? 'gym' : location.hash === '#matchmaking' ? 'off' : 'cal';
+    ['cal', 'fly', 'gym', 'off'].forEach(function (k) {
+      document.querySelectorAll('.tab-' + k).forEach(function (n) { n.hidden = tab !== k; });
+      document.getElementById('tab-btn-' + k).setAttribute('aria-selected', tab === k ? 'true' : 'false');
+    });
+    document.getElementById('seg-status').hidden = tab !== 'cal';
+    document.getElementById('seg-year').hidden = tab !== 'cal';
+    document.getElementById('seg-body').hidden = tab === 'gym';
+  }
+  document.querySelectorAll('.tab').forEach(function (b) {
+    b.addEventListener('click', function () {
+      location.hash = { fly: 'flyweight', gym: 'gyms', off: 'matchmaking', cal: 'calendar' }[b.getAttribute('data-tab')];
+      applyTab();
+    });
+  });
+  window.addEventListener('hashchange', applyTab);
+
+  // Totals on the tabs ignore the filters.
+  function updateTabs() {
+    var ea = EVENTS.filter(function (e) { return e.body === 'assoc'; }).length;
+    var el2 = EVENTS.filter(function (e) { return e.body === 'league'; }).length;
+    var ba = LADDER.filter(function (b) { return b.a > 0; }).length;
+    var bl = LADDER.filter(function (b) { return b.l > 0; }).length;
+    document.getElementById('n-cal').textContent = EVENTS.length;
+    document.getElementById('m-cal').textContent = ea + ' association · ' + el2 + ' league';
+    document.getElementById('n-fly').textContent = LADDER.length;
+    document.getElementById('m-fly').textContent = ba + ' association · ' + bl + ' league';
+    document.getElementById('m-fly').title = 'Boxers with at least one bout at each kind of event. Some boxers are in both.';
+    document.getElementById('n-gym').textContent = GYMS.length;
+    document.getElementById('m-gym').textContent = GYMS.filter(function (g) { return g.ph === 'ok'; }).length + ' with a phone number';
+    document.getElementById('n-off').textContent = OFFICIALS.length;
+    document.getElementById('m-off').textContent = OFFICIALS.filter(function (o) { return o.kind === 'assoc'; }).length + ' association · ' + OFFICIALS.filter(function (o) { return o.kind === 'league'; }).length + ' league';
+  }
+
+  updateTabs();
+  render();
+  applyTab();
+})();
+</script>
