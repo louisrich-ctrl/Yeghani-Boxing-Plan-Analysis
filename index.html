@@ -201,6 +201,7 @@ table.lad { border-collapse: collapse; width: 100%; min-width: 800px; font-size:
     <button type="button" class="tab" role="tab" id="tab-btn-gym" data-tab="gym" aria-selected="false"><span class="tl">Boxing gyms <b class="tn" id="n-gym"></b></span><span class="tm" id="m-gym"></span></button>
     <button type="button" class="tab" role="tab" id="tab-btn-off" data-tab="off" aria-selected="false"><span class="tl">Matchmaking contacts <b class="tn" id="n-off"></b></span><span class="tm" id="m-off"></span></button>
     <button type="button" class="tab" role="tab" id="tab-btn-cnt" data-tab="cnt" aria-selected="false"><span class="tl">Key counters</span><span class="tm" id="m-cnt"></span></button>
+    <button type="button" class="tab" role="tab" id="tab-btn-mu" data-tab="mu" aria-selected="false"><span class="tl">Match-ups <b class="tn" id="n-mu"></b></span><span class="tm" id="m-mu"></span></button>
   </div>
 
   <section class="controls" aria-label="Filters">
@@ -259,6 +260,16 @@ table.lad { border-collapse: collapse; width: 100%; min-width: 800px; font-size:
     <p class="lad-sum" id="gy-sum"></p>
     <div class="lad-scroll"><table class="lad" id="gyms"></table></div>
     <p class="hint" style="margin:10px 0 0; max-width:70ch">These are the gyms named on the flyweight ladder. A number appears only when a listing showed the whole number. Gyms with nothing here are usually small clubs that list contact details on Facebook or Instagram, which I could not open. Call the state association if you cannot reach a club.</p>
+  </section>
+
+  <section class="tab-mu" aria-labelledby="mu-h" hidden>
+    <div class="panel-h">
+      <h2 id="mu-h">Possible match-ups for Yeganeh Karimfar</h2>
+      <span class="hint" id="mu-count"></span>
+    </div>
+    <p class="lad-sum" id="mu-sum"></p>
+    <div id="matchups"></div>
+    <p class="hint" style="margin:10px 0 0; max-width:70ch">Ranked by closeness of record, then state, then the kind of event each boxer has fought at. Records come from the BoxRec screenshots you sent. Ages, experience level, current activity and sanctioning are unknown, so the matchmaker has to confirm every pairing. Association or league labels are partly inferred from the events I could match.</p>
   </section>
 
   <section class="tab-cnt" aria-labelledby="ct-h" hidden>
@@ -764,7 +775,54 @@ table.lad { border-collapse: collapse; width: 100%; min-width: 800px; font-size:
     document.getElementById('m-cnt').textContent = bA + ' association · ' + bL + ' league bouts';
   }
 
-  function render() { renderChips(); renderMatrix(); renderAgenda(); renderLadder(); renderGyms(); renderOfficials(); renderCounters(); renderNotes(); }
+  // Match-ups for one boxer. Opponent facts are looked up from LADDER so they stay in step with the ladder tab.
+  var MU_BOXER = 'Yeganeh Karimfar';
+  var MATCHUPS = [
+    { n: 'Linda Abed', kind: 'assoc', why: 'Same city, one association bout, closest experience.' },
+    { n: 'Tabitha Sommers', kind: 'assoc', why: 'Same 0-1 record and association only. Needs interstate travel.' },
+    { n: 'Rhianna Kenny', kind: 'assoc', why: 'Close experience. Has association and league bouts. Interstate.' },
+    { n: 'Josie Yuan', kind: 'assoc', why: 'Close experience. Has association and league bouts. Interstate.' },
+    { n: "Sarah O'Shea", kind: 'assoc', why: 'A little more experienced. Interstate.' },
+    { n: 'Willow Barwick', kind: 'assoc', why: 'A little more experienced. Interstate.' },
+    { n: 'Amelia Thomas', kind: 'assoc', why: 'Stretch match, 2-2 with bouts in both. Interstate.' },
+    { n: 'Clarissa Smith', kind: 'league', why: 'Same state (Ballarat). League bouts only, unbeaten, so a step up.' },
+    { n: 'Zahra Rahimi', kind: 'league', why: 'Same 0-1 record, league bout. State not listed.' },
+    { n: 'Zahra Ahmadi', kind: 'league', why: 'Same 0-1 record, league bout. State not listed.' },
+    { n: 'Josie Yuan', kind: 'league', why: 'Has a league bout as well. Interstate.' },
+    { n: 'Rhianna Kenny', kind: 'league', why: 'Has a league bout as well. Interstate.' },
+    { n: 'Erika Rodriguez', kind: 'league', why: 'League only, 1-3. A more experienced test. Interstate.' },
+    { n: 'Monica Setio', kind: 'league', why: 'League only, 1-4. A more experienced test. Interstate.' }
+  ];
+
+  function renderMatchups() {
+    var me = LADDER.filter(function (b) { return b.n === MU_BOXER; })[0];
+    var rows = MATCHUPS.filter(function (m) {
+      var b = LADDER.filter(function (x) { return x.n === m.n; })[0];
+      return (bodyMode === 'all' || m.kind === bodyMode) && (!b.st || on[b.st]);
+    });
+    document.getElementById('mu-count').textContent = rows.length + ' of ' + MATCHUPS.length + ' match-ups shown';
+    document.getElementById('mu-sum').textContent = MU_BOXER + ' is #' + me.r + ' on the ladder, ' + me.rec + ', ' + me.loc + ', trains at ' + me.gym + '. Use the organiser filter to see association or league options.';
+    var h = '';
+    [['assoc', 'Through the association'], ['league', 'Through a league']].forEach(function (g) {
+      var list = rows.filter(function (m) { return m.kind === g[0]; });
+      if (!list.length) return;
+      h += '<div class="ct-h3">' + g[1] + '</div><div class="lad-scroll"><table class="lad" style="min-width:820px"><thead><tr><th>#</th><th>Opponent</th><th>Record</th><th>State</th><th>Gym and phone</th><th>Why</th></tr></thead><tbody>';
+      list.forEach(function (m, i) {
+        var b = LADDER.filter(function (x) { return x.n === m.n; })[0];
+        var gy = GYMS.filter(function (x) { return b.gym && (x.n === b.gym || x.n.indexOf(b.gym) === 0); })[0];
+        var contact = b.gym ? '<span class="nm">' + b.gym + '</span><span class="sub">' + (gy && gy.phone ? gy.phone : 'No number found') + '</span>' : '<span class="sub">Gym not listed</span>';
+        h += '<tr><td class="num">' + (i + 1) + '</td><td><span class="nm">' + m.n + '</span><span class="sub">Ladder #' + b.r + '</span></td><td class="num">' + b.rec + '</td><td>' + (b.st ? tags([b.st]) : '<span class="sub">Not listed</span>') + '</td><td>' + contact + '</td><td><span class="sub">' + m.why + '</span></td></tr>';
+      });
+      h += '</tbody></table></div>';
+    });
+    var ba = OFFICIALS.filter(function (o) { return o.org === 'Boxing Victoria'; })[0];
+    h += '<div class="ct-h3">Who to call</div><p style="margin:0; max-width:70ch; font-size:14px">Association: ' + ba.role + ', ' + ba.phone + ', ' + ba.email + '. League: ask the promoter running the card, or use the VABL contact form. See the Matchmaking contacts tab.</p>';
+    document.getElementById('matchups').innerHTML = h || '<p class="hint">No match-ups match. Turn on another state.</p>';
+    document.getElementById('n-mu').textContent = MATCHUPS.length;
+    document.getElementById('m-mu').textContent = MATCHUPS.filter(function (m) { return m.kind === 'assoc'; }).length + ' association · ' + MATCHUPS.filter(function (m) { return m.kind === 'league'; }).length + ' league';
+  }
+
+  function render() { renderChips(); renderMatrix(); renderAgenda(); renderLadder(); renderGyms(); renderOfficials(); renderCounters(); renderMatchups(); renderNotes(); }
 
   document.querySelectorAll('.seg').forEach(function (g) {
     g.querySelectorAll('button').forEach(function (b) {
@@ -780,8 +838,8 @@ table.lad { border-collapse: collapse; width: 100%; min-width: 800px; font-size:
   document.getElementById('all-on').addEventListener('click', function () { STATES.forEach(function (s) { on[s.k] = true; }); render(); });
 
   function applyTab() {
-    var tab = location.hash === '#flyweight' ? 'fly' : location.hash === '#gyms' ? 'gym' : location.hash === '#matchmaking' ? 'off' : location.hash === '#counters' ? 'cnt' : 'cal';
-    ['cal', 'fly', 'gym', 'off', 'cnt'].forEach(function (k) {
+    var tab = location.hash === '#flyweight' ? 'fly' : location.hash === '#gyms' ? 'gym' : location.hash === '#matchmaking' ? 'off' : location.hash === '#counters' ? 'cnt' : location.hash === '#matchups' ? 'mu' : 'cal';
+    ['cal', 'fly', 'gym', 'off', 'cnt', 'mu'].forEach(function (k) {
       document.querySelectorAll('.tab-' + k).forEach(function (n) { n.hidden = tab !== k; });
       document.getElementById('tab-btn-' + k).setAttribute('aria-selected', tab === k ? 'true' : 'false');
     });
@@ -791,7 +849,7 @@ table.lad { border-collapse: collapse; width: 100%; min-width: 800px; font-size:
   }
   document.querySelectorAll('.tab').forEach(function (b) {
     b.addEventListener('click', function () {
-      location.hash = { fly: 'flyweight', gym: 'gyms', off: 'matchmaking', cnt: 'counters', cal: 'calendar' }[b.getAttribute('data-tab')];
+      location.hash = { fly: 'flyweight', gym: 'gyms', off: 'matchmaking', cnt: 'counters', mu: 'matchups', cal: 'calendar' }[b.getAttribute('data-tab')];
       applyTab();
     });
   });
